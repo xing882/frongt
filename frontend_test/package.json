@@ -1,0 +1,11 @@
+{
+  "name": "building-energy-test-ui",
+  "private": true,
+  "description": "临时联调页，正式前端由组员替换",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

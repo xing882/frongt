@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Accidental debug / proxy dumps
+backend/out.json
+
+# Node (联调前端)
+frontend_test/node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# 根目录 npm（concurrently）
+node_modules/
+.npm-cache/
+
+# 运行时数据与上传（勿入库）
+backend/data/uploads/
+backend/data/*.sqlite
+
+# 模型权重与临时文件（体积大）
+backend/*.pt
+backend/tmp_test.png
+
+# IDE
+.idea/

@@ -1,0 +1,15 @@
+{
+  "name": "building-energy-system",
+  "private": true,
+  "description": "建筑能源智能管理：FastAPI 后端 + Vue3 前端联调",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd backend && py -3 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8765",
+    "dev:web": "cd frontend && pnpm dev",
+    "build:web": "cd frontend && pnpm build",
+    "preview:web": "cd frontend && pnpm preview"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
