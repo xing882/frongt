@@ -1,6 +1,6 @@
 """
 赛题要求「基于 MCP 协议」的数据接入与查询：此处提供与工具能力等价的 HTTP 清单，
-便于智能体 / RagFlow / 自研 MCP Server 映射为 tools。
+便于智能体或自研 MCP Server 映射为 tools。
 """
 from __future__ import annotations
 

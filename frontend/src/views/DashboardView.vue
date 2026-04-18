@@ -11,6 +11,11 @@ import {
   OfficeBuilding,
   RefreshRight,
   TrendCharts,
+  DataLine,
+  Cpu,
+  Reading,
+  Monitor,
+  Setting,
 } from '@element-plus/icons-vue'
 import AppChart from '@/components/AppChart.vue'
 import * as api from '@/api'
@@ -30,6 +35,52 @@ const anomalies = ref(null)
 const timeseries = ref(null)
 
 const REFRESH_MS = 30_000
+
+/** 赛题能力导航：与路由、后端能力对齐 */
+const MODULE_NAV = [
+  {
+    key: 'data',
+    title: '（1）数据层',
+    desc: '能耗数据集与元数据、字典；路径可配，支持缓存重载与知识库索引。',
+    links: [
+      { path: '/energy', label: '能源监控', icon: Lightning },
+      { path: '/admin', label: '系统管理 · 数据与索引', icon: Setting },
+    ],
+  },
+  {
+    key: 'stats',
+    title: '（2）查询与统计',
+    desc: '按建筑、时间、指标查询；时段汇总、COP 演示、异常分析；图表与报表导出。',
+    links: [
+      { path: '/stats', label: '统计分析', icon: Histogram },
+      { path: '/benchmark', label: '能效对标', icon: DataLine },
+      { path: '/screen', label: '数据大屏', icon: Monitor },
+    ],
+  },
+  {
+    key: 'ops',
+    title: '（3）智慧运维',
+    desc: '领域知识库 + RAG/LLM 问答；孪生视觉、运营指标与工单闭环。',
+    links: [
+      { path: '/knowledge', label: '智能问答', icon: Reading },
+      { path: '/operations', label: '运营与预测', icon: Odometer },
+      { path: '/incidents', label: '告警与工单', icon: WarningFilled },
+      { path: '/twin', label: '孪生与视觉', icon: Sunny },
+    ],
+  },
+  {
+    key: 'sys',
+    title: '（4）系统集成',
+    desc: 'MCP 工具清单、OpenAPI、健康检查；前后端一体化演示。',
+    links: [
+      { path: '/admin', label: '系统管理 · MCP', icon: Cpu },
+    ],
+  },
+]
+
+function goPath(p) {
+  router.push(p)
+}
 
 const metricMeta = {
   electricity_kwh: { label: '市电用电', unit: 'kWh', short: '电' },
@@ -260,7 +311,8 @@ usePolling(() => loadData(false, true), REFRESH_MS)
       <div>
         <h1 class="dash-title">能源仪表盘</h1>
         <p class="dash-desc">
-          实时汇总能耗与对标数据；每 {{ REFRESH_MS / 1000 }} 秒自动刷新。图表为简洁样式，突出数值与趋势。
+          赛题 A08 建筑能源智能管理：数据层、查询统计、智慧运维与系统集成统一入口。下方为能力导航；本页每
+          {{ REFRESH_MS / 1000 }} 秒自动刷新核心指标。
         </p>
       </div>
       <div class="dash-actions">
@@ -271,6 +323,34 @@ usePolling(() => loadData(false, true), REFRESH_MS)
           刷新
         </el-button>
       </div>
+    </div>
+
+    <!-- 赛题能力导航 -->
+    <div class="module-nav section">
+      <div class="module-nav-head">
+        <h2 class="module-nav-title">赛题能力导航</h2>
+        <p class="module-nav-sub">点击跳转对应功能模块；数据集导入与报表导出见「系统管理」「统计分析」。</p>
+      </div>
+      <el-row :gutter="[16, 16]">
+        <el-col v-for="block in MODULE_NAV" :key="block.key" :xs="24" :sm="12" :lg="6">
+          <el-card shadow="hover" class="module-card">
+            <div class="module-card-title">{{ block.title }}</div>
+            <p class="module-card-desc">{{ block.desc }}</p>
+            <div class="module-card-links">
+              <el-button
+                v-for="ln in block.links"
+                :key="ln.path + ln.label"
+                class="module-link-btn"
+                size="small"
+                @click="goPath(ln.path)"
+              >
+                <el-icon class="module-link-ico"><component :is="ln.icon" /></el-icon>
+                {{ ln.label }}
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
     <!-- 系统状态 -->
@@ -462,6 +542,70 @@ usePolling(() => loadData(false, true), REFRESH_MS)
 
 .section {
   margin-bottom: 8px;
+}
+
+.module-nav {
+  margin-bottom: 16px;
+}
+
+.module-nav-head {
+  margin-bottom: 12px;
+}
+
+.module-nav-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.module-nav-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.45;
+}
+
+.module-card {
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.module-card :deep(.el-card__body) {
+  padding: 14px 16px 16px;
+}
+
+.module-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 8px;
+}
+
+.module-card-desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.45);
+  min-height: 3.1em;
+}
+
+.module-card-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.module-link-btn {
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0;
+}
+
+.module-link-ico {
+  margin-right: 6px;
+  font-size: 15px;
 }
 
 .section-title {

@@ -1,5 +1,6 @@
 import 'element-plus/dist/index.css'
 import './styles/ems-theme.css'
+import './styles/print.css'
 import './assets/main.css'
 
 import { createApp } from 'vue'

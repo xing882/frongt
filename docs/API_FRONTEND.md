@@ -65,7 +65,11 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/admin/status` | 展示能耗/元数据/字典/KB/司空路径与就绪状态、行数等 |
+| GET | `/api/admin/status` | 展示能耗/元数据/字典/KB/司空/LLM 路径与就绪状态、行数等 |
+| GET | `/api/admin/dataset/import-status` | 当前生效 CSV 路径及是否使用 `data/imported/` 上传文件 |
+| POST | `/api/admin/dataset/upload-energy` | `multipart/form-data` 上传能耗 CSV（`building_id`,`monitor_time` 及至少一类指标列） |
+| POST | `/api/admin/dataset/upload-metadata` | 上传元数据 CSV（需 `building_id`） |
+| POST | `/api/admin/dataset/upload-dictionary` | 上传数据字典 CSV |
 | POST | `/api/admin/reload` | 清缓存并重新加载 CSV/司空（更新数据后生效） |
 | POST | `/api/admin/kb/reindex` | 重建知识库索引（可能较慢） |
 
@@ -305,9 +309,13 @@ PDF 全文检索（FTS5）。
 
 ### 3.7 助手 ` /api/assistant`
 
-#### `POST /api/assistant/rag-answer`（推荐：赛题纯 RAG）
+#### `GET /api/assistant/llm-status`
 
-合并 **规范 PDF + 司空**，拼装一段 **`answer`**。
+返回是否已配置 `LLM_API_BASE` 及当前 `model` 名称（供前端展示）。
+
+#### `POST /api/assistant/rag-answer`（智慧运维：RAG + 可选 LLM）
+
+合并 **规范 PDF + 司空语料 + 数据字典关键词检索**；若问题命中运维类关键词，注入 **时段能耗汇总与异常检测摘要**（演示数据集）。若环境变量配置了 **OpenAI 兼容接口**（`LLM_API_BASE`），默认由轻量 LLM 基于上述上下文生成回答（`mode: rag_llm`）；未配置或调用失败时回退为检索拼装（`mode: rag_only`）。前端 **「智能问答」** 页面调用本接口。
 
 **Body**
 
@@ -315,20 +323,29 @@ PDF 全文检索（FTS5）。
 {
   "query": "空气源热泵能效限定值",
   "kb_limit": 8,
-  "sikong_limit": 5
+  "sikong_limit": 5,
+  "use_llm": null,
+  "building_id": null
 }
 ```
+
+| 字段 | 说明 |
+|------|------|
+| use_llm | `null` 自动（已配置 LLM 则生成）；`false` 仅检索拼装；`true` 强制请求 LLM |
+| building_id | 可选，筛选运维数据摘要时的建筑 |
 
 **响应要点**
 
 | 字段 | 说明 |
 |------|------|
 | query | 原问题 |
-| mode | 固定 `rag_only` |
-| description | 说明为检索拼装 |
-| answer | 多段文本，可直接展示 |
-| citations | 引用列表 |
-| retrieval | `pdf` / `sikong` 命中统计与 `message` |
+| mode | `rag_only` 或 `rag_llm` |
+| description | 模式说明 |
+| answer | 主回答文本 |
+| baseline_answer | 在 `rag_llm` 时附带检索拼装底稿，便于对照 |
+| citations | 含 `pdf` / `sikong` / `data_dictionary` |
+| retrieval | `pdf`、`sikong`、`data_dictionary`、`ops_data` |
+| llm | `used`、`model`、`error` |
 
 #### `POST /api/assistant/knowledge-merge`
 
@@ -385,7 +402,7 @@ PDF 全文检索（FTS5）。
 
 #### `GET /api/mcp/tools`
 
-返回 `tools[]`：名称、描述、HTTP `method`、`path`、参数 schema，供映射 MCP 或 RagFlow 工具。
+返回 `tools[]`：名称、描述、HTTP `method`、`path`、参数 schema，供映射 MCP 或智能体工具。
 
 ---
 
@@ -496,8 +513,8 @@ const data = await r.json();
 | 统计（时段/COP/异常） | `/api/stats/period`、`cop-proxy`、`anomalies` |
 | 可视化 | `GET /api/stats/timeseries` |
 | 报表 | `GET /api/stats/export/csv` |
-| 领域知识检索 | `GET /api/kb/search`、`GET /api/sikong/search` |
-| 智能运维 / RAG | `POST /api/assistant/rag-answer` |
+| 领域关键词检索（调试/管理） | `GET /api/kb/search`、`GET /api/sikong/search` |
+| 领域智能问答（PDF+司空+字典+运维摘要，可选 LLM） | `POST /api/assistant/rag-answer`、`GET /api/assistant/llm-status` |
 | MCP 映射 | `GET /api/mcp/tools` |
 | V2 视觉 / 孪生 / 报告 | `POST /api/v2/vision/upload`、`GET /api/v2/twin/scene`、`GET /api/v2/reports/{kind}`（kind=operations 或 esg）等 |
 
@@ -508,5 +525,6 @@ const data = await r.json();
 接口以 **`/openapi.json`** 与仓库内 FastAPI 路由为准；升级时请 diff OpenAPI。
 
 - **近期**：`POST /api/v2/vision/upload` 支持 Query `conf`；响应 `yolo` 含 `conf_used`、`inference_attempts` 等；实现上每次 `set_classes` 后重建 predictor（见 [TECHNICAL.md](./TECHNICAL.md) §3.6）。
+- **近期**：知识页改为「智能问答」对话 UI；司空检索对中文问句增加整句匹配与二字滑窗词，以提升自然语言召回。
 
 更多架构说明见 [TECHNICAL.md](./TECHNICAL.md)。

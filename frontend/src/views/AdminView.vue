@@ -7,10 +7,12 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const status = ref(null)
 const health = ref(null)
 const mcpTools = ref(null)
+const importStatus = ref(null)
 const loading = ref(false)
 const reloading = ref(false)
 const reindexing = ref(false)
 const loadingMcp = ref(false)
+const uploading = ref({ energy: false, meta: false, dict: false })
 
 const PATH_LABELS = {
   energy_csv: '能耗 CSV',
@@ -83,10 +85,14 @@ async function loadMcp() {
   }
 }
 
+async function loadImportStatus() {
+  importStatus.value = await api.getAdminDatasetImportStatus().catch(() => null)
+}
+
 async function load() {
   loading.value = true
   try {
-    const [s] = await Promise.all([api.getAdminStatus(), loadHealth()])
+    const [s] = await Promise.all([api.getAdminStatus(), loadHealth(), loadImportStatus()])
     status.value = s
   } catch (e) {
     ElMessage.error(e.message ?? '无法读取状态')
@@ -136,6 +142,54 @@ async function reindexKb() {
   }
 }
 
+async function onUploadEnergy(opt) {
+  const f = opt?.file
+  if (!f) return
+  uploading.value.energy = true
+  try {
+    const r = await api.postAdminDatasetUploadEnergy(f)
+    ElMessage.success(`能耗数据已导入 ${r.rows ?? '—'} 行`)
+    await load()
+    await loadImportStatus()
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.detail ?? e.message ?? '上传失败')
+  } finally {
+    uploading.value.energy = false
+  }
+}
+
+async function onUploadMeta(opt) {
+  const f = opt?.file
+  if (!f) return
+  uploading.value.meta = true
+  try {
+    const r = await api.postAdminDatasetUploadMetadata(f)
+    ElMessage.success(`元数据已导入 ${r.rows ?? '—'} 行`)
+    await load()
+    await loadImportStatus()
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.detail ?? e.message ?? '上传失败')
+  } finally {
+    uploading.value.meta = false
+  }
+}
+
+async function onUploadDict(opt) {
+  const f = opt?.file
+  if (!f) return
+  uploading.value.dict = true
+  try {
+    const r = await api.postAdminDatasetUploadDictionary(f)
+    ElMessage.success(`数据字典已导入 ${r.rows ?? '—'} 行`)
+    await load()
+    await loadImportStatus()
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.detail ?? e.message ?? '上传失败')
+  } finally {
+    uploading.value.dict = false
+  }
+}
+
 onMounted(async () => {
   await load()
   await loadMcp()
@@ -143,9 +197,72 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="myems-page admin-view">
-    <h1 class="myems-page-title">系统管理</h1>
-    <p class="myems-page-desc">数据路径与运维；API {{ apiBaseDisplay }} · 生产请为 <code>/api/admin</code> 加鉴权</p>
+  <div class="myems-page admin-view ems-page-shell">
+    <header class="admin-page-head">
+      <h1 class="myems-page-title">系统管理</h1>
+      <p class="myems-page-desc">
+      数据与知识库运维；支持 CSV 导入覆盖默认数据集。API {{ apiBaseDisplay }} · 生产请为
+      <code>/api/admin</code> 加鉴权
+      </p>
+    </header>
+
+    <el-card shadow="never" class="ems-card admin-card hide-print">
+      <template #header>数据集导入（HTTP）</template>
+      <p class="upload-hint">
+        上传文件保存至后端 <code>data/imported/</code>，优先级高于环境变量路径。能耗表需含
+        building_id、monitor_time 及至少一类指标列。
+      </p>
+      <el-descriptions v-if="importStatus" :column="1" size="small" border class="import-desc">
+        <el-descriptions-item label="能耗 CSV">
+          {{ importStatus.energy?.active_path ?? '—' }}
+          <el-tag v-if="importStatus.energy?.using_imported" size="small" type="success" class="ml8"
+            >已用上传</el-tag
+          >
+        </el-descriptions-item>
+        <el-descriptions-item label="元数据 CSV">
+          {{ importStatus.metadata?.active_path ?? '—' }}
+          <el-tag v-if="importStatus.metadata?.using_imported" size="small" type="success" class="ml8"
+            >已用上传</el-tag
+          >
+        </el-descriptions-item>
+        <el-descriptions-item label="数据字典 CSV">
+          {{ importStatus.data_dictionary?.active_path ?? '—' }}
+          <el-tag
+            v-if="importStatus.data_dictionary?.using_imported"
+            size="small"
+            type="success"
+            class="ml8"
+            >已用上传</el-tag
+          >
+        </el-descriptions-item>
+      </el-descriptions>
+      <div class="upload-row">
+        <el-upload
+          :show-file-list="false"
+          :disabled="uploading.energy"
+          accept=".csv"
+          :http-request="onUploadEnergy"
+        >
+          <el-button type="primary" size="small" :loading="uploading.energy">上传能耗 CSV</el-button>
+        </el-upload>
+        <el-upload
+          :show-file-list="false"
+          :disabled="uploading.meta"
+          accept=".csv"
+          :http-request="onUploadMeta"
+        >
+          <el-button size="small" :loading="uploading.meta">上传元数据 CSV</el-button>
+        </el-upload>
+        <el-upload
+          :show-file-list="false"
+          :disabled="uploading.dict"
+          accept=".csv"
+          :http-request="onUploadDict"
+        >
+          <el-button size="small" :loading="uploading.dict">上传数据字典 CSV</el-button>
+        </el-upload>
+      </div>
+    </el-card>
 
     <div class="admin-bar">
       <el-button type="primary" :icon="RefreshRight" :loading="loading" size="small" @click="load">
@@ -167,6 +284,9 @@ onMounted(async () => {
         <span class="stat-text">司空 <strong>{{ countsLine.s }}</strong> 条</span>
         <el-tag :type="readyKb ? 'success' : 'info'" size="small">KB {{ readyKb ? '就绪' : '未索引' }}</el-tag>
         <el-tag :type="readySk ? 'success' : 'info'" size="small">司空 {{ readySk ? '就绪' : '未就绪' }}</el-tag>
+        <el-tag :type="status?.ready?.llm_configured ? 'success' : 'info'" size="small">
+          LLM {{ status?.ready?.llm_configured ? (status?.llm?.model ?? '已配置') : '未配置' }}
+        </el-tag>
       </div>
 
       <el-table
@@ -228,6 +348,36 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.admin-page-head {
+  border-left: 3px solid var(--el-color-primary);
+  padding-left: 14px;
+  margin-bottom: 4px;
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.06), transparent 50%);
+  border-radius: 0 8px 8px 0;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.import-desc {
+  margin-bottom: 12px;
+}
+
+.ml8 {
+  margin-left: 8px;
+}
+
+.upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-bar {
   display: flex;
   flex-wrap: wrap;

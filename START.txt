@@ -19,16 +19,10 @@
    后端读取路径可用环境变量 SIKONG_JSONL 覆盖。
 
 【赛题能力对照（后端已实现）】
-- 多条件能耗查询：GET /api/energy/records
-- 三类统计：时段汇总 /stats/period、COP 演示 /stats/cop-proxy、异常分析 /stats/anomalies
-- 可视化数据：/stats/timeseries（labels+values，供 ECharts）
-- 报表导出：/stats/export/csv
-- 领域知识：PDF 全文检索 /kb/search + 司空语料 /sikong/search
-- 智慧运维（纯 RAG）：POST /assistant/rag-answer（PDF+司空检索并拼装回答，无 LLM）
-- 检索原始片段：POST /assistant/knowledge-merge（PDF+司空，供自定义拼装）
-- MCP 工具清单（映射用）：GET /api/mcp/tools
-- 严格 MCP（stdio 进程）：在 backend 目录运行 python -m app.mcp_server（不要在该终端手动输入/回车）
-- V2.0 强化：POST /v2/vision/upload（Query：mode、prompt、conf 可选；默认 YOLO-World；需 ultralytics + CLIP，见 backend\requirements-v2-vision.txt）、/v2/twin/scene、/v2/ops/suggestions、/v2/forecast/energy、/v2/reports/{operations|esg}
+- （1）数据层：能耗/元数据/字典 CSV 路径可配；**POST /api/admin/dataset/upload-*** 上传至 data/imported/ 优先生效；GET /api/admin/dataset/import-status；POST /api/admin/reload 重载；POST /api/admin/kb/reindex 重建 PDF 索引。
+- （2）查询统计：GET /api/energy/records；时段汇总 /stats/period、COP 演示 /stats/cop-proxy、异常 /stats/anomalies；/stats/timeseries；报表 /stats/export/csv。
+- （3）智慧运维：POST /api/assistant/rag-answer（PDF+司空+数据字典+运维摘要+可选 LLM）；GET /api/assistant/llm-status。LLM 见 backend/.env.example 中 LLM_*。
+- （4）集成：正式前端「能源仪表盘」含赛题能力导航；GET /api/mcp/tools；MCP stdio：python -m app.mcp_server；V2：/v2/vision/upload、/v2/twin/scene 等见 docs。
 
 【命令】
 1) 知识库索引（PDF 变更后）
@@ -43,25 +37,49 @@
      python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 18888
    浏览器打开 http://127.0.0.1:18888/api 应返回 JSON（含 examples），不是 {"detail":"Not Found"}。
 
-3) 正式 Web 前端（Vue3 + Vite，推荐）
-   cd <本仓库>\building_energy_system\frontend
-   pnpm install
-   pnpm dev
-   浏览器一般为 http://127.0.0.1:5173 ，Vite 将 /api、/health、/docs 等代理到 8765（见 frontend\vite.config.js）
-   或在 building_energy_system 根目录：npm install && npm run dev（同时起后端+前端，见 README.md）
+3) 正式前端（Vue + Vite）
+   首次安装依赖：
+   cd d:\BDG数据集\building_energy_system\frontend
+   npm install
 
-4) 临时测试前端（旧版静态页 + Node 代理，可选）
-   cd <本仓库>\building_energy_system\frontend_test
+   开发启动（推荐）：
+   npm run dev
+   浏览器访问终端输出地址（通常 http://127.0.0.1:5173）
+   默认通过 Vite 代理转发 /api 到 http://127.0.0.1:8765
+
+   若你习惯从 frontend_test 目录启动（兼容入口）：
+   cd d:\BDG数据集\building_energy_system\frontend_test
    npm start
-   浏览器 http://127.0.0.1:3000 ，API 根地址留空（Node 默认代理到 8765）
-   后端若改端口（如 18888），必须与代理一致，例如先执行：
-     set BACKEND_URL=http://127.0.0.1:18888
-   再 npm start
+   该命令会自动转发到 ../frontend 的 dev 启动。
 
 【若出现 {"detail":"Not Found"}】
-- 多半是后端未在本机成功监听，或前端代理端口与后端不一致。
+- 多半是后端未在本机成功监听，或前端代理目标与后端端口不一致。
 - 先单独打开后端文档页：与 uvicorn 端口一致，例如 http://127.0.0.1:18888/docs
 - 再访问同端口的 http://127.0.0.1:18888/api ；能访问则说明 API 正常，再检查 BACKEND_URL。
 
 环境变量：ENERGY_CSV、METADATA_CSV、DATA_DICTIONARY_CSV、KB_ROOT、KB_INDEX_DB、SIKONG_JSONL；
 清洗脚本 BDG_DATA_DIR、BDG_OUT_DIR；合并脚本 SIKONG_SRC_DIR、SIKONG_OUT_DIR。
+
+【LLM 智能问答（可选）】
+后端会读取 building_energy_system\backend\.env（若存在）。快速步骤：
+1) 安装依赖（含 python-dotenv）：
+   cd d:\BDG数据集\building_energy_system\backend
+   pip install -r requirements.txt
+2) 编辑 backend\.env（可用 copy .env.example .env 从零开始）：
+   - 阿里云百炼 · 通义千问（OpenAI 兼容，推荐）：
+     控制台 https://bailian.console.aliyun.com 创建 API-KEY 后填入：
+       LLM_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
+       LLM_API_KEY=你的密钥
+       LLM_MODEL=qwen-plus
+     （模型名以百炼文档为准，如 qwen-turbo、qwen-max 等）
+   - 本机 Ollama：安装 https://ollama.com ，终端 ollama pull 模型名 后：
+       LLM_API_BASE=http://127.0.0.1:11434/v1
+       LLM_MODEL=qwen2.5:7b
+       LLM_API_KEY 可留空
+3) 重启 uvicorn 后，浏览器打开 GET /api/assistant/llm-status 或 前端「智能问答」页顶栏应显示「LLM 已配置」。
+也可用系统环境变量覆盖（不建 .env 时）：LLM_API_BASE、LLM_API_KEY（百炼必填）、LLM_MODEL、LLM_TIMEOUT_SEC。
+
+【百炼常见误解】
+- 不需要「自己部署模型」：有 API-KEY 即可，在 .env 里写对 LLM_MODEL（如 qwen-turbo、qwen-plus），请求里会指定模型名。
+- 若仍失败：看后端终端或前端返回里的「LLM HTTP」全文；常见为密钥错误、模型名与控制台不一致、账号未开通/欠费、地域 URL 选错（国内一般用北京 base）。
+- 可先改 LLM_MODEL=qwen-turbo 试通，再换其它模型。

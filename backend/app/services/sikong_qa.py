@@ -43,6 +43,42 @@ def count_rows() -> int:
     return len(_load_rows())
 
 
+def expand_query_terms(q: str) -> list[str]:
+    """对外：分词/滑窗规则与司空检索一致，供数据字典等复用。"""
+    return _expand_search_terms(q)
+
+
+def _expand_search_terms(q: str) -> list[str]:
+    """空格/标点分词 + 整句；对连续中文长串补充 2 字滑窗，提升自然语言问句召回。"""
+    q = (q or "").strip()
+    if not q:
+        return []
+    parts: list[str] = []
+    for seg in re.split(r"[\s，。、；：？！,.;:!?]+", q):
+        s = seg.strip()
+        if s:
+            parts.append(s)
+    if not parts:
+        parts = [q]
+    terms: list[str] = []
+    seen: set[str] = set()
+    for p in parts:
+        if p not in seen:
+            seen.add(p)
+            terms.append(p)
+        if len(p) >= 4 and re.fullmatch(r"[\u4e00-\u9fff]+", p):
+            n = 0
+            for i in range(len(p) - 1):
+                bi = p[i : i + 2]
+                if bi not in seen:
+                    seen.add(bi)
+                    terms.append(bi)
+                    n += 1
+                    if n >= 28:
+                        break
+    return terms
+
+
 def search_sikong(query: str, limit: int = 20) -> dict[str, Any]:
     """关键词在问句/答句中匹配（演示级，可换向量检索）。"""
     q = (query or "").strip()
@@ -59,14 +95,18 @@ def search_sikong(query: str, limit: int = 20) -> dict[str, Any]:
             "results": [],
         }
 
-    terms = [t for t in re.split(r"\s+", q) if t]
+    terms = _expand_search_terms(q)
+    q_lower = q.lower()
     scored: list[tuple[int, dict[str, Any]]] = []
 
     for r in rows:
         text = (r["input"] + "\n" + r["output"]).lower()
         score = 0
+        if q_lower in text:
+            score += 10
         for t in terms:
-            if t.lower() in text:
+            tl = t.lower()
+            if len(tl) >= 2 and tl in text:
                 score += 1
         if score > 0:
             scored.append((score, r))

@@ -2,11 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.config import settings
 from app.services import kb_search, sikong_qa
-from app.services.energy_store import load_energy, load_metadata
+from app.services.dataset_paths import IMPORT_DIR
+from app.services.dataset_upload import (
+    validate_and_save_dictionary,
+    validate_and_save_energy,
+    validate_and_save_metadata,
+)
+from app.services.energy_store import clear_data_caches, load_energy, load_metadata
+from app.services.llm_openai_compat import llm_configured
+from app.services.ops_context import clear_dictionary_cache
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -51,6 +59,11 @@ def status() -> dict[str, Any]:
         "ready": {
             "kb_index_ready": kb_search.is_index_ready(),
             "sikong_ready": sikong_qa.is_ready(),
+            "llm_configured": llm_configured(),
+        },
+        "llm": {
+            "model": settings.llm_model if llm_configured() else None,
+            "api_base": settings.llm_api_base if llm_configured() else None,
         },
         "counts": {
             "energy_rows": energy_rows,
@@ -85,6 +98,75 @@ def reload_data() -> dict[str, Any]:
             "kb_index_db": str(settings.kb_index_db),
         },
     }
+
+
+@router.get("/dataset/import-status")
+def dataset_import_status() -> dict[str, Any]:
+    """展示 HTTP 上传数据集是否覆盖默认路径。"""
+    from app.services.dataset_paths import (
+        data_dictionary_csv_path,
+        energy_csv_path,
+        metadata_csv_path,
+    )
+
+    def _info(name: str, resolver) -> dict[str, Any]:
+        imp = IMPORT_DIR / name
+        return {
+            "imported_file_exists": imp.is_file(),
+            "active_path": str(resolver()),
+            "using_imported": imp.is_file(),
+        }
+
+    return {
+        "import_dir": str(IMPORT_DIR),
+        "energy": _info("building_energy_hourly.csv", energy_csv_path),
+        "metadata": _info("metadata_subset.csv", metadata_csv_path),
+        "data_dictionary": _info("data_dictionary.csv", data_dictionary_csv_path),
+    }
+
+
+@router.post("/dataset/upload-energy")
+async def dataset_upload_energy(file: UploadFile = File(...)) -> dict[str, Any]:
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="空文件")
+    try:
+        out = validate_and_save_energy(raw)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    clear_data_caches()
+    out["counts"] = {"energy_rows": int(len(load_energy()))}
+    return out
+
+
+@router.post("/dataset/upload-metadata")
+async def dataset_upload_metadata(file: UploadFile = File(...)) -> dict[str, Any]:
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="空文件")
+    try:
+        out = validate_and_save_metadata(raw)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    clear_data_caches()
+    out["counts"] = {
+        "energy_rows": int(len(load_energy())),
+        "metadata_rows": int(len(load_metadata())),
+    }
+    return out
+
+
+@router.post("/dataset/upload-dictionary")
+async def dataset_upload_dictionary(file: UploadFile = File(...)) -> dict[str, Any]:
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="空文件")
+    try:
+        out = validate_and_save_dictionary(raw)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    clear_dictionary_cache()
+    return out
 
 
 @router.post("/kb/reindex")

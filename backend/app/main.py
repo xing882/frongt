@@ -9,11 +9,11 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.routers import admin, assistant, energy, incidents, kb, mcp_manifest, meta, sikong, stats, v2
+from app.routers import admin, assistant, chatchat_proxy, energy, incidents, kb, mcp_manifest, meta, sikong, stats, v2
 
 app = FastAPI(
     title="建筑能源智能管理 API",
-    description="赛题 A08：能耗数据查询统计（时段汇总/COP 演示/异常分析）、报表导出、规范 PDF 知识库、司空 text2text 语料、纯 RAG 运维问答（/assistant/rag-answer）、MCP 工具清单。",
+    description="赛题 A08：能耗数据查询统计（时段汇总/COP 演示/异常分析）、报表导出、规范 PDF 知识库、司空语料、数据字典与运维数据摘要、可选 OpenAI 兼容 LLM 的智慧运维问答（/assistant/rag-answer）、MCP 工具清单。",
     version="0.2.3",
 )
 
@@ -31,6 +31,7 @@ app.include_router(kb.router, prefix=settings.api_prefix)
 app.include_router(meta.router, prefix=settings.api_prefix)
 app.include_router(sikong.router, prefix=settings.api_prefix)
 app.include_router(assistant.router, prefix=settings.api_prefix)
+app.include_router(chatchat_proxy.router, prefix=settings.api_prefix)
 app.include_router(mcp_manifest.router, prefix=settings.api_prefix)
 app.include_router(admin.router, prefix=settings.api_prefix)
 app.include_router(incidents.router, prefix=settings.api_prefix)
@@ -71,6 +72,8 @@ def api_discovery() -> dict[str, Any]:
             "kb_search": f"{p}/kb/search?q=节能",
             "sikong_search": f"{p}/sikong/search?q=热工",
             "rag_answer": f"{p}/assistant/rag-answer (POST JSON: query)",
+            "chatchat_status": f"{p}/chatchat/status",
+            "chatchat_kb_chat": f"{p}/chatchat/kb-chat (POST JSON: query, kb_name, …转发至队友 Chatchat)",
             "incidents": f"{p}/incidents",
             "incidents_summary": f"{p}/incidents/summary",
             "v2_vision_analyze": f"{p}/v2/vision/analyze (POST JSON: filename)",

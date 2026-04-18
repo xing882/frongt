@@ -60,8 +60,26 @@ export function postSikongRagDemo(body) {
   return http.post('/api/sikong/rag-demo', body).then((r) => r.data)
 }
 
+/** @param {{ query: string, kb_limit?: number, sikong_limit?: number, use_llm?: boolean|null, building_id?: string|null }} body */
 export function postAssistantRagAnswer(body) {
   return http.post('/api/assistant/rag-answer', body).then((r) => r.data)
+}
+
+export function getAssistantLlmStatus() {
+  return http.get('/api/assistant/llm-status').then((r) => r.data)
+}
+
+/** 队友 Chatchat 转发：是否配置、能否连通 */
+export function getChatchatStatus() {
+  return http.get('/api/chatchat/status').then((r) => r.data)
+}
+
+/**
+ * 知识库对话，转发至 Chatchat POST /chat/kb_chat
+ * @param {Record<string, unknown>} body query, kb_name, mode?: 'local_kb', stream?: false, …
+ */
+export function postChatchatKbChat(body) {
+  return http.post('/api/chatchat/kb-chat', body).then((r) => r.data)
 }
 
 export function postAssistantKnowledgeMerge(body) {
@@ -94,6 +112,43 @@ export function postAdminReload() {
 
 export function postAdminKbReindex() {
   return http.post('/api/admin/kb/reindex').then((r) => r.data)
+}
+
+export function getAdminDatasetImportStatus() {
+  return http.get('/api/admin/dataset/import-status').then((r) => r.data)
+}
+
+/** @param {File} file */
+export function postAdminDatasetUploadEnergy(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  return http
+    .post('/api/admin/dataset/upload-energy', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((r) => r.data)
+}
+
+/** @param {File} file */
+export function postAdminDatasetUploadMetadata(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  return http
+    .post('/api/admin/dataset/upload-metadata', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((r) => r.data)
+}
+
+/** @param {File} file */
+export function postAdminDatasetUploadDictionary(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  return http
+    .post('/api/admin/dataset/upload-dictionary', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((r) => r.data)
 }
 
 export function getMcpTools() {
@@ -132,6 +187,8 @@ export function postV2VisionUpload(file, params = {}) {
   fd.append('file', file)
   return http
     .post('/api/v2/vision/upload', fd, {
+      // 覆盖默认 application/json，确保 FastAPI 能正确解析 UploadFile
+      headers: { 'Content-Type': 'multipart/form-data' },
       params: {
         mode: params.mode ?? 'yolo_world',
         ...(params.prompt != null && params.prompt !== '' ? { prompt: params.prompt } : {}),

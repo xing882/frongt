@@ -21,9 +21,12 @@
   --ems-danger: #ff4d4f;
   --ems-danger-soft: #fff2f0;
 
-  --ems-card-radius: 6px;
-  --ems-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ems-card-radius: 8px;
+  --ems-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --ems-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06);
   --ems-chart-palette: #1890ff, #52c41a, #69c0ff, #95de64, #8c8c8c;
+  --ems-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
 }
 
 html {
@@ -41,6 +44,17 @@ html {
 body {
   background: var(--ems-main-bg) !important;
   color: var(--ems-text);
+  font-family: var(--ems-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 内容区统一边距与最大宽度，大屏下留白更正式 */
+.ems-page-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ems-page-title {
@@ -73,8 +87,10 @@ body {
 
 /* MyEMS 类管理页：浅灰筛选条 + 白卡片内容区 */
 .myems-page {
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 2px;
+  box-sizing: border-box;
 }
 
 .myems-page-title {

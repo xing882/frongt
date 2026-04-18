@@ -36,7 +36,7 @@ def energy_query_records(
     limit: int = 500,
 ) -> dict[str, Any]:
     """Query hourly energy records by building/time window."""
-    _, items = query_energy(building_id=building_id, time_from=time_from, time_to=time_to, limit=limit)
+    items = query_energy(building_id=building_id, time_from=time_from, time_to=time_to, limit=limit)
     return {"count": len(items), "items": items}
 
 

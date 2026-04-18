@@ -76,12 +76,12 @@ building_energy_system/
 ### 3.4 司空语料
 
 - 文件：`SIKONG_JSONL`（默认指向工作区 `sft_merged/sikong_sft_all.jsonl`）。
-- `sikong_qa._load_rows()` 缓存全量 jsonl；`search_sikong` 按**关键词**在 input/output 中计分排序。
+- `sikong_qa._load_rows()` 缓存全量 jsonl；`search_sikong` 在 input/output 中计分排序：整句子串匹配加权，并对连续中文补充 2 字滑窗词以提升自然语言问句召回。
 
-### 3.5 纯 RAG 问答
+### 3.5 智慧运维问答（RAG + 可选 LLM）
 
-- 实现位置：`services/rag_answer.py`。
-- 流程：`search_kb`（FTS）+ `search_sikong`（关键词）→ 按模板拼装 **`answer`** 与 **`citations`**，**不调用**外部 LLM。
+- 实现位置：`services/rag_answer.py`、`services/ops_context.py`（数据字典检索、能耗/异常摘要）、`services/llm_openai_compat.py`（OpenAI 兼容 `chat/completions`）。
+- 流程：`search_kb`（FTS）+ `search_sikong`（关键词）+ `search_data_dictionary`（关键词）→ 条件注入 `stats_service.period_summary` / `anomaly_analysis` 文本摘要；若设置 `LLM_API_BASE`，则调用轻量 LLM 归纳生成，否则仅拼装。
 
 ### 3.6 V2 视觉上传（YOLO / YOLO-World）
 

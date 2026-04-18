@@ -16,10 +16,13 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const collapsed = ref(false)
-const asideWidth = computed(() => (collapsed.value ? '64px' : '228px'))
+const asideWidth = computed(() => (collapsed.value ? '64px' : '248px'))
 const active = computed(() => route.path)
 
 const openeds = ref(['grp-analysis', 'grp-more'])
+
+const moduleTitle = computed(() => route.meta?.module ?? '')
+const pageTitle = computed(() => route.meta?.title ?? '')
 </script>
 
 <template>
@@ -29,8 +32,8 @@ const openeds = ref(['grp-analysis', 'grp-more'])
         <div v-if="!collapsed" class="ems-brand-full">
           <span class="ems-brand-mark">EMS</span>
           <div class="ems-brand-text">
-            <div class="ems-brand-title">建筑能源</div>
-            <div class="ems-brand-sub">Energy Management</div>
+            <div class="ems-brand-title">建筑能源智能管理</div>
+            <div class="ems-brand-sub">赛题 A08 · EMS</div>
           </div>
         </div>
         <span v-else class="ems-brand-mini">E</span>
@@ -65,7 +68,7 @@ const openeds = ref(['grp-analysis', 'grp-more'])
           <el-sub-menu index="grp-analysis">
             <template #title>
               <el-icon><Histogram /></el-icon>
-              <span class="menu-label">数据分析</span>
+              <span class="menu-label">查询与统计</span>
             </template>
             <el-menu-item index="/stats">
               <span class="sub-label">统计分析</span>
@@ -77,7 +80,7 @@ const openeds = ref(['grp-analysis', 'grp-more'])
 
           <el-menu-item index="/knowledge">
             <el-icon><Reading /></el-icon>
-            <span class="menu-label">知识检索</span>
+            <span class="menu-label">智能问答</span>
           </el-menu-item>
 
           <el-menu-item index="/incidents">
@@ -88,7 +91,7 @@ const openeds = ref(['grp-analysis', 'grp-more'])
           <el-sub-menu index="grp-more">
             <template #title>
               <el-icon><MoreFilled /></el-icon>
-              <span class="menu-label">更多</span>
+              <span class="menu-label">扩展能力</span>
             </template>
             <el-menu-item index="/twin">
               <span class="sub-label">孪生与视觉</span>
@@ -105,7 +108,7 @@ const openeds = ref(['grp-analysis', 'grp-more'])
 
       <div class="ems-aside-foot">
         <el-icon class="foot-icon"><Cpu /></el-icon>
-        <span v-if="!collapsed" class="foot-text">折叠侧栏以扩大内容区</span>
+        <span v-if="!collapsed" class="foot-text">数据层 · 查询统计 · 智慧运维</span>
       </div>
     </el-aside>
 
@@ -119,12 +122,25 @@ const openeds = ref(['grp-analysis', 'grp-more'])
             </el-button>
           </el-tooltip>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item>建筑能源 EMS</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ route.meta?.title ?? '' }}</el-breadcrumb-item>
+            <el-breadcrumb-item>建筑能源智能管理系统</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="moduleTitle">{{ moduleTitle }}</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ pageTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         <div class="ems-header-right">
-          <el-tag class="hide-xs" type="info" size="small" effect="plain">REST /api</el-tag>
+          <el-button
+            class="hide-xs"
+            tag="a"
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            type="primary"
+            link
+            size="small"
+          >
+            API 文档
+          </el-button>
+          <el-tag class="hide-xs" type="info" size="small" effect="plain">REST / MCP</el-tag>
         </div>
       </el-header>
       <el-main class="ems-main">
@@ -288,8 +304,9 @@ const openeds = ref(['grp-analysis', 'grp-more'])
   align-items: center;
   justify-content: space-between;
   background: #fff;
-  border-bottom: 1px solid #eee;
-  padding: 0 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02), 0 4px 12px rgba(15, 23, 42, 0.04);
+  padding: 0 20px;
   height: 56px;
 }
 
@@ -313,9 +330,24 @@ const openeds = ref(['grp-analysis', 'grp-more'])
 }
 
 .ems-main {
-  padding: 16px;
+  padding: 20px 22px 28px;
   overflow: auto;
-  background: var(--ems-main-bg, #f5f7fa);
+  background: linear-gradient(180deg, #f0f2f5 0%, #f5f7fa 32%, #f5f7fa 100%);
+}
+
+.ems-header :deep(.el-breadcrumb) {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ems-header :deep(.el-breadcrumb__inner) {
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 500;
+}
+
+.ems-header :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+  color: rgba(0, 0, 0, 0.88);
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
