@@ -1,17 +1,41 @@
 /* 现代简约 EMS：蓝 / 绿 / 灰 / 白，数据为主、低饱和装饰 */
 
 :root {
-  --ems-sidebar-bg: #001529;
+  /* 灰度与表面（工业 B 端 token） */
+  --ems-text-primary: #1f2329;
+  --ems-text-regular: #4e5969;
+  --ems-text-placeholder: #86909c;
+  --ems-bg-base: #f2f3f5;
+  --ems-bg-card: #ffffff;
+  --ems-border-color: #dee0e3;
+  --ems-border-light: #e5e6eb;
+
+  --ems-space-xs: 4px;
+  --ems-space-sm: 8px;
+  --ems-space-md: 16px;
+  --ems-space-lg: 24px;
+  --ems-space-xl: 32px;
+
+  --ems-radius-sm: 4px;
+  --ems-radius-md: 8px;
+  --ems-shadow-subtle: 0 2px 4px rgba(31, 35, 41, 0.05);
+
+  /* 侧栏深色底（略浅于纯 Ant 蓝黑，减轻压迫感） */
+  --ems-bg-dark: #1d2129;
+  --ems-blue-rgb: 24, 144, 255;
+  --ems-sidebar-bg: var(--ems-bg-dark);
   --ems-sidebar-text: rgba(255, 255, 255, 0.65);
-  --ems-main-bg: #f5f7fa;
-  --ems-surface: #ffffff;
-  --ems-border: #e8e8e8;
-  --ems-text: rgba(0, 0, 0, 0.85);
-  --ems-text-secondary: rgba(0, 0, 0, 0.45);
+  --ems-main-bg: var(--ems-bg-base);
+  --ems-surface: var(--ems-bg-card);
+  --ems-border: var(--ems-border-light);
+  --ems-text: var(--ems-text-primary);
+  --ems-text-secondary: var(--ems-text-regular);
   --ems-text-muted: rgba(0, 0, 0, 0.25);
 
   /* 语义色：仅用于状态与告警 */
   --ems-blue: #1890ff;
+  /* 菜单选中浅底（与 MainLayout 左侧条配合） */
+  --ems-menu-active-bg: rgba(24, 144, 255, 0.12);
   --ems-blue-soft: #e6f4ff;
   --ems-green: #52c41a;
   --ems-green-soft: #f6ffed;
@@ -21,12 +45,17 @@
   --ems-danger: #ff4d4f;
   --ems-danger-soft: #fff2f0;
 
-  --ems-card-radius: 8px;
-  --ems-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --ems-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06);
+  --ems-card-radius: var(--ems-radius-md);
+  --ems-shadow: var(--ems-shadow-subtle);
+  --ems-shadow-md: 0 4px 14px rgba(31, 35, 41, 0.06);
   --ems-chart-palette: #1890ff, #52c41a, #69c0ff, #95de64, #8c8c8c;
   --ems-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  /* KPI / 表格数字：等宽，减少跳动 */
+  --ems-font-number: 'Roboto Mono', 'SF Mono', ui-monospace, Monaco, 'Courier New', monospace;
+  --ems-shadow-hover: 0 12px 24px -12px rgba(0, 0, 0, 0.15);
+  --ems-danger-alpha: rgba(255, 77, 79, 0.1);
+  --ems-success-alpha: rgba(82, 196, 26, 0.1);
 }
 
 html {
@@ -49,9 +78,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 数值类：统一等宽数字 */
+.dash-kpi-num,
+.myems-kpi-value,
+.animated-num,
+.ems-tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--ems-font-number), var(--ems-font-sans);
+}
+
 /* 内容区统一边距与最大宽度，大屏下留白更正式 */
 .ems-page-shell {
   max-width: 1280px;
+  padding: 0 var(--ems-space-sm);
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -72,10 +111,26 @@ body {
 }
 
 .ems-card {
-  border-radius: var(--ems-card-radius);
-  box-shadow: var(--ems-shadow);
-  border: 1px solid var(--ems-border);
-  background: var(--ems-surface);
+  border-radius: var(--ems-radius-md);
+  background: var(--ems-bg-card);
+  border: 1px solid var(--ems-border-color);
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ems-card:hover {
+  border-color: var(--ems-blue);
+  box-shadow: var(--ems-shadow-subtle);
+}
+
+.el-card.ems-card .el-card__header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ems-border-light);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ems-text-primary);
 }
 
 /* 触控友好：按钮与可点击区域不小于约 40px */
@@ -87,9 +142,9 @@ body {
 
 /* MyEMS 类管理页：浅灰筛选条 + 白卡片内容区 */
 .myems-page {
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 2px;
+  padding: 0 var(--ems-space-sm);
   box-sizing: border-box;
 }
 
@@ -97,21 +152,21 @@ body {
   margin: 0 0 4px;
   font-size: 18px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--ems-text-primary);
 }
 
 .myems-page-desc {
   margin: 0 0 14px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--ems-text-regular);
 }
 
 .myems-toolbar {
-  background: #f5f5f5;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
+  background: var(--ems-bg-base);
+  border: 1px solid var(--ems-border-light);
+  border-radius: var(--ems-radius-sm);
+  padding: 14px var(--ems-space-md);
+  margin-bottom: var(--ems-space-md);
 }
 
 .myems-toolbar .el-form-item {
@@ -143,12 +198,13 @@ body {
 }
 
 .myems-kpi-card {
-  background: #fff;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  padding: 16px 18px;
+  background: var(--ems-bg-card);
+  border: 1px solid var(--ems-border-color);
+  border-radius: var(--ems-radius-md);
+  border-left: 3px solid var(--ems-border-color);
+  padding: var(--ems-space-md) 18px;
   min-height: 96px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: none;
 }
 
 .myems-kpi-label {
@@ -185,12 +241,12 @@ body {
 }
 
 .myems-section {
-  background: #fff;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  padding: 14px 16px 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  background: var(--ems-bg-card);
+  border: 1px solid var(--ems-border-color);
+  border-radius: var(--ems-radius-md);
+  padding: 14px var(--ems-space-md) var(--ems-space-md);
+  margin-bottom: var(--ems-space-md);
+  box-shadow: none;
 }
 
 .myems-section-head {
@@ -208,4 +264,231 @@ body {
 .myems-donut-grid .chart-mini {
   min-height: 230px;
   height: 230px;
+}
+
+/* —— Dashboard 首屏（能力矩阵 + KPI 阵列） —— */
+.dash-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  /* 外边距由 MainLayout 主内容区 padding 承担，避免双重留白 */
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.dash-header-mini {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ems-space-md);
+  margin-bottom: var(--ems-space-md);
+}
+
+.dash-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ems-space-sm);
+  min-width: 0;
+}
+
+.dash-title-group .ems-page-title {
+  margin: 0;
+}
+
+.dash-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ems-space-sm);
+}
+
+.dash-update-time {
+  font-size: 12px;
+  color: var(--ems-text-secondary);
+}
+
+.nav-matrix {
+  margin-bottom: var(--ems-space-lg);
+}
+
+.nav-tile {
+  height: 100%;
+  background: var(--ems-bg-card);
+  border: 1px solid var(--ems-border-color);
+  border-radius: var(--ems-radius-md);
+  padding: var(--ems-space-md);
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav-tile:hover {
+  border-color: var(--ems-blue);
+  box-shadow: var(--ems-shadow-subtle);
+}
+
+.nav-tile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  margin-bottom: var(--ems-space-sm);
+  min-height: 44px;
+}
+
+.nav-id {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ems-text-placeholder);
+}
+
+.nav-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ems-text-primary);
+  line-height: 1.35;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-btn {
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0;
+  font-weight: 400;
+}
+
+.dash-kpi-section-title {
+  margin: 0 0 var(--ems-space-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ems-text-regular);
+  letter-spacing: 0.02em;
+}
+
+.dash-kpi-grid {
+  margin-bottom: var(--ems-space-md);
+}
+
+.dash-kpi-card {
+  position: relative;
+  height: 100%;
+  background: var(--ems-bg-card);
+  border: 1px solid var(--ems-border-color);
+  border-radius: var(--ems-radius-md);
+  padding: 14px var(--ems-space-md);
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+.dash-kpi-card:hover {
+  border-color: var(--ems-border-light);
+}
+
+/* 顶部状态色带（非侵入式告警） */
+.dash-kpi-card--strip-danger::before,
+.dash-kpi-card--strip-warn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--ems-radius-md) var(--ems-radius-md) 0 0;
+}
+
+.dash-kpi-card--strip-danger::before {
+  background: var(--ems-danger);
+}
+
+.dash-kpi-card--strip-warn::before {
+  background: var(--ems-warning);
+}
+
+.dash-kpi-label {
+  font-size: 12px;
+  color: var(--ems-text-secondary);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.dash-kpi-value-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 32px;
+}
+
+.dash-kpi-num {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ems-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.dash-kpi-unit {
+  font-size: 12px;
+  color: var(--ems-text-placeholder);
+  font-weight: 400;
+}
+
+.dash-kpi-footer {
+  margin-top: 8px;
+}
+
+.dash-kpi-status {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  transform: scale(0.9);
+  transform-origin: left center;
+  color: var(--ems-text-secondary);
+}
+
+.dash-kpi-status.is-ok {
+  color: var(--ems-green);
+}
+
+.dash-kpi-status.is-warn {
+  color: var(--ems-warning);
+}
+
+.dash-kpi-status.is-danger {
+  color: var(--ems-danger);
+}
+
+.dash-kpi-status.is-muted {
+  color: var(--ems-text-placeholder);
+}
+
+.dash-kpi-status.is-info {
+  color: var(--ems-blue);
+}
+
+.dash-chart-row {
+  margin-top: var(--ems-space-sm);
+}
+
+.dash-about-tip {
+  max-width: 400px;
+  line-height: 1.55;
+  font-size: 12px;
+}
+
+.dash-about-tip p {
+  margin: 0 0 8px;
+}
+
+.dash-about-tip p:last-child {
+  margin-bottom: 0;
 }

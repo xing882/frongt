@@ -6,9 +6,10 @@ import * as api from '@/api'
 import { usePolling } from '@/composables/usePolling'
 import { ElMessage } from 'element-plus'
 
-const axisText = '#8eb4dc'
-const axisLine = '#1c3d5c'
-const splitLine = 'rgba(30, 60, 90, 0.6)'
+/* 深色大屏：低对比轴线 + 少荧光，贴近生产监视屏 */
+const axisText = '#8b949e'
+const axisLine = '#30363d'
+const splitLine = 'rgba(48, 54, 61, 0.45)'
 
 const loading = ref(true)
 const lastUpdated = ref(null)
@@ -118,7 +119,7 @@ const barGroupedOption = computed(() => {
   const chilled = hasData ? agg.chilled : [0, 0, 0, 0, 0, 0, 0]
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', textStyle: { color: '#cfe8ff' } },
+    tooltip: { trigger: 'axis', textStyle: { color: '#c9d1d9' } },
     legend: {
       data: ['市电累计', '冷量当量累计'],
       textStyle: { color: axisText },
@@ -135,7 +136,7 @@ const barGroupedOption = computed(() => {
       type: 'value',
       name: 'kWh',
       nameTextStyle: { color: axisText, fontSize: 11 },
-      axisLine: { show: true, lineStyle: { color: axisLine } },
+      axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' } },
       axisLabel: { color: axisText },
     },
@@ -146,17 +147,7 @@ const barGroupedOption = computed(() => {
         barMaxWidth: 18,
         data: elec,
         itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: '#00d4ff' },
-              { offset: 1, color: '#0066cc' },
-            ],
-          },
+          color: '#1890ff',
           borderRadius: [4, 4, 0, 0],
         },
       },
@@ -166,17 +157,7 @@ const barGroupedOption = computed(() => {
         barMaxWidth: 18,
         data: chilled,
         itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: '#52c41a' },
-              { offset: 1, color: '#237804' },
-            ],
-          },
+          color: '#52c41a',
           borderRadius: [4, 4, 0, 0],
         },
       },
@@ -194,7 +175,7 @@ const lineAreaOption = computed(() => {
   const unit = timeseries.value?.unit_hint ?? 'kWh/h'
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', textStyle: { color: '#cfe8ff' } },
+    tooltip: { trigger: 'axis', textStyle: { color: '#c9d1d9' } },
     grid: { left: 52, right: 20, top: 28, bottom: labels.length > 40 ? 40 : 28 },
     xAxis: {
       type: 'category',
@@ -207,6 +188,7 @@ const lineAreaOption = computed(() => {
       type: 'value',
       name: unit,
       nameTextStyle: { color: axisText },
+      axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' } },
       axisLabel: { color: axisText },
     },
@@ -216,7 +198,7 @@ const lineAreaOption = computed(() => {
         smooth: true,
         showSymbol: false,
         data: values.length ? values : [0],
-        lineStyle: { width: 2, color: '#00d4ff' },
+        lineStyle: { width: 2, color: '#58a6ff' },
         areaStyle: {
           color: {
             type: 'linear',
@@ -225,8 +207,8 @@ const lineAreaOption = computed(() => {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(0, 212, 255, 0.45)' },
-              { offset: 1, color: 'rgba(0, 40, 80, 0.05)' },
+              { offset: 0, color: 'rgba(88, 166, 255, 0.22)' },
+              { offset: 1, color: 'rgba(13, 17, 23, 0.02)' },
             ],
           },
         },
@@ -264,7 +246,7 @@ const gaugeTripleOption = computed(() => {
             ],
           },
         },
-        pointer: { itemStyle: { color: '#00e5ff' } },
+        pointer: { itemStyle: { color: '#58a6ff' } },
         axisTick: { distance: -10, length: 6, lineStyle: { color: '#4a6a8a' } },
         splitLine: { distance: -12, length: 12, lineStyle: { color: '#4a6a8a' } },
         axisLabel: { color: axisText, distance: 14, fontSize: 10 },
@@ -289,7 +271,7 @@ const gaugeTripleOption = computed(() => {
             width: 10,
             color: [
               [0.4, '#1890ff'],
-              [0.8, '#00d4ff'],
+              [0.8, '#69c0ff'],
               [1, '#52c41a'],
             ],
           },
@@ -356,10 +338,10 @@ const radarOption = computed(() => {
   ]
   return {
     backgroundColor: 'transparent',
-    tooltip: { textStyle: { color: '#cfe8ff' } },
+    tooltip: { textStyle: { color: '#c9d1d9' } },
     radar: {
       indicator: indicators,
-      splitArea: { areaStyle: { color: ['rgba(0,80,120,0.2)', 'rgba(0,40,60,0.15)'] } },
+      splitArea: { areaStyle: { color: ['rgba(48, 54, 61, 0.35)', 'rgba(22, 27, 34, 0.25)'] } },
       axisName: { color: axisText, fontSize: 11 },
       splitLine: { lineStyle: { color: axisLine } },
       axisLine: { lineStyle: { color: axisLine } },
@@ -371,9 +353,9 @@ const radarOption = computed(() => {
           {
             value: v,
             name: '全库归一',
-            areaStyle: { color: 'rgba(0, 212, 255, 0.35)' },
-            lineStyle: { color: '#00d4ff', width: 2 },
-            itemStyle: { color: '#00e5ff' },
+            areaStyle: { color: 'rgba(88, 166, 255, 0.2)' },
+            lineStyle: { color: '#58a6ff', width: 2 },
+            itemStyle: { color: '#58a6ff' },
           },
         ],
       },
@@ -386,7 +368,7 @@ const donutOption = computed(() => {
   const parts = [
     { value: Number(sums.electricity_kwh) || 0, name: '市电', itemStyle: { color: '#1890ff' } },
     { value: Number(sums.solar_kwh) || 0, name: '光伏', itemStyle: { color: '#52c41a' } },
-    { value: Number(sums.chilledwater_kwh_eq) || 0, name: '冷量', itemStyle: { color: '#00d4ff' } },
+    { value: Number(sums.chilledwater_kwh_eq) || 0, name: '冷量', itemStyle: { color: '#69c0ff' } },
     { value: Number(sums.hotwater_kwh) || 0, name: '热水', itemStyle: { color: '#faad14' } },
   ].filter((p) => p.value > 0)
   if (!parts.length) {
@@ -402,7 +384,7 @@ const donutOption = computed(() => {
   }
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'item', textStyle: { color: '#cfe8ff' } },
+    tooltip: { trigger: 'item', textStyle: { color: '#c9d1d9' } },
     legend: {
       orient: 'vertical',
       right: 8,
@@ -415,8 +397,8 @@ const donutOption = computed(() => {
         radius: ['42%', '68%'],
         center: ['40%', '50%'],
         avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 6, borderColor: '#0d1b2a', borderWidth: 2 },
-        label: { color: '#cfe8ff', fontSize: 11 },
+        itemStyle: { borderRadius: 6, borderColor: '#0d1117', borderWidth: 2 },
+        label: { color: '#c9d1d9', fontSize: 11 },
         data: parts,
       },
     ],
@@ -429,13 +411,13 @@ const hBarOption = computed(() => {
   const vals = items.map((it) => Number(it.total_electricity_kwh) || 0)
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, textStyle: { color: '#cfe8ff' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, textStyle: { color: '#c9d1d9' } },
     grid: { left: 120, right: 48, top: 16, bottom: 16 },
     xAxis: {
       type: 'value',
       name: 'kWh',
       nameTextStyle: { color: axisText },
-      axisLine: { lineStyle: { color: axisLine } },
+      axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' } },
       axisLabel: { color: axisText },
     },
@@ -451,17 +433,7 @@ const hBarOption = computed(() => {
         data: vals.length ? vals : [0],
         barMaxWidth: 16,
         itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 1,
-            y2: 0,
-            colorStops: [
-              { offset: 0, color: '#003a8c' },
-              { offset: 1, color: '#00d4ff' },
-            ],
-          },
+          color: '#1890ff',
           borderRadius: [0, 4, 4, 0],
         },
       },
@@ -488,7 +460,7 @@ const scatterMapLikeOption = computed(() => {
         if (!Array.isArray(arr)) return ''
         return `${arr[2]}<br/>Y=${arr[1]} · 总电 ${fmtNum(arr[3], 0)} kWh`
       },
-      textStyle: { color: '#cfe8ff' },
+      textStyle: { color: '#c9d1d9' },
     },
     grid: { left: 48, right: 24, top: 24, bottom: 32 },
     xAxis: {
@@ -496,7 +468,7 @@ const scatterMapLikeOption = computed(() => {
       name: '名次序',
       nameTextStyle: { color: axisText },
       min: 0,
-      axisLine: { lineStyle: { color: axisLine } },
+      axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' } },
       axisLabel: { color: axisText },
     },
@@ -505,7 +477,7 @@ const scatterMapLikeOption = computed(() => {
       name: '得分',
       max: 100,
       nameTextStyle: { color: axisText },
-      axisLine: { lineStyle: { color: axisLine } },
+      axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' } },
       axisLabel: { color: axisText },
     },
@@ -518,9 +490,9 @@ const scatterMapLikeOption = computed(() => {
         },
         rippleEffect: { brushType: 'stroke', scale: 2.5 },
         itemStyle: {
-          color: '#00d4ff',
-          shadowBlur: 12,
-          shadowColor: 'rgba(0, 212, 255, 0.5)',
+          color: '#58a6ff',
+          shadowBlur: 6,
+          shadowColor: 'rgba(88, 166, 255, 0.25)',
         },
         data: data.length ? data : [[50, 50, '无数据', 0]],
       },
@@ -690,15 +662,15 @@ usePolling(() => loadAll({ silent: true }), 60_000)
   margin: -16px;
   min-height: calc(100vh - 56px - 32px);
   padding: 16px 16px 24px;
-  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1a3a5c 0%, #0d1b2a 45%, #050a10 100%);
-  color: #cfe8ff;
+  background: #0d1117;
+  color: #c9d1d9;
 }
 
 .screen-header {
   margin-bottom: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(0, 212, 255, 0.15);
-  box-shadow: 0 4px 24px rgba(0, 80, 120, 0.15);
+  border-bottom: 1px solid #30363d;
+  box-shadow: none;
 }
 
 .screen-head-row {
@@ -714,17 +686,14 @@ usePolling(() => loadAll({ silent: true }), 60_000)
   text-align: left;
   font-size: clamp(20px, 3vw, 26px);
   font-weight: 600;
-  letter-spacing: 0.08em;
-  background: linear-gradient(90deg, #69c0ff, #00e5ff, #bae637);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  letter-spacing: 0.02em;
+  color: #e6edf3;
 }
 
 .screen-sub {
   margin: 8px 0 0;
   font-size: 12px;
-  color: rgba(142, 180, 220, 0.85);
+  color: #8b949e;
 }
 
 .screen-err {
@@ -739,7 +708,7 @@ usePolling(() => loadAll({ silent: true }), 60_000)
 
 .hint-bid {
   font-size: 12px;
-  color: rgba(142, 180, 220, 0.65);
+  color: #6e7681;
   margin: 0 0 12px;
 }
 
@@ -750,27 +719,27 @@ usePolling(() => loadAll({ silent: true }), 60_000)
 .kpi-tile {
   padding: 14px 16px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 212, 255, 0.25);
-  background: rgba(10, 30, 50, 0.65);
-  box-shadow: 0 0 20px rgba(0, 120, 180, 0.08) inset;
+  border: 1px solid #30363d;
+  background: #161b22;
+  box-shadow: none;
 }
 
 .kpi-tile--ok {
-  border-color: rgba(82, 196, 26, 0.45);
+  border-left: 3px solid #52c41a;
 }
 .kpi-tile--warn {
-  border-color: rgba(250, 173, 20, 0.5);
+  border-left: 3px solid #faad14;
 }
 .kpi-tile--danger {
-  border-color: rgba(255, 77, 79, 0.45);
+  border-left: 3px solid #ff4d4f;
 }
 .kpi-tile--normal {
-  border-color: rgba(24, 144, 255, 0.4);
+  border-left: 3px solid #1890ff;
 }
 
 .kpi-label {
   font-size: 12px;
-  color: #8eb4dc;
+  color: #8b949e;
   margin-bottom: 6px;
 }
 
@@ -778,14 +747,14 @@ usePolling(() => loadAll({ silent: true }), 60_000)
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #e6f4ff;
+  color: #e6edf3;
 }
 
 .kpi-unit {
   font-size: 12px;
   font-weight: 400;
   margin-left: 4px;
-  color: #69c0ff;
+  color: #6e7681;
 }
 
 .panel-row {
@@ -801,11 +770,9 @@ usePolling(() => loadAll({ silent: true }), 60_000)
   min-height: 280px;
   padding: 12px 14px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 212, 255, 0.22);
-  background: rgba(8, 22, 42, 0.75);
-  box-shadow:
-    0 0 20px rgba(0, 180, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border: 1px solid #30363d;
+  background: #161b22;
+  box-shadow: none;
 }
 
 .panel--tall {
@@ -815,10 +782,10 @@ usePolling(() => loadAll({ silent: true }), 60_000)
 .panel-title {
   font-size: 13px;
   font-weight: 600;
-  color: #8eb4dc;
+  color: #c9d1d9;
   margin-bottom: 8px;
   padding-left: 8px;
-  border-left: 3px solid #00d4ff;
+  border-left: 3px solid #1890ff;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -828,7 +795,7 @@ usePolling(() => loadAll({ silent: true }), 60_000)
 .panel-hint {
   font-size: 11px;
   font-weight: 400;
-  color: rgba(142, 180, 220, 0.55);
+  color: #6e7681;
 }
 
 .chart-box {

@@ -12,9 +12,10 @@ import {
   Monitor,
 } from '@element-plus/icons-vue'
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const collapsed = ref(false)
 const asideWidth = computed(() => (collapsed.value ? '64px' : '248px'))
 const active = computed(() => route.path)
@@ -23,6 +24,31 @@ const openeds = ref(['grp-analysis', 'grp-more'])
 
 const moduleTitle = computed(() => route.meta?.module ?? '')
 const pageTitle = computed(() => route.meta?.title ?? '')
+
+/** 与 router meta.moduleKey 对齐：面包屑中间层快捷切换同级页 */
+const MODULE_QUICK = {
+  hub: [{ path: '/dashboard', title: '能源仪表盘' }],
+  data: [{ path: '/energy', title: '能源监控' }],
+  stats: [
+    { path: '/screen', title: '数据大屏' },
+    { path: '/stats', title: '统计分析' },
+    { path: '/benchmark', title: '能效对标' },
+  ],
+  ops: [
+    { path: '/knowledge', title: '智能问答' },
+    { path: '/incidents', title: '告警与工单' },
+    { path: '/twin', title: '孪生与视觉' },
+    { path: '/operations', title: '运营与预测' },
+  ],
+  sys: [{ path: '/admin', title: '系统管理' }],
+}
+
+const modulePeers = computed(() => MODULE_QUICK[route.meta?.moduleKey] ?? [])
+const showModuleDropdown = computed(() => modulePeers.value.length > 1 && !!moduleTitle.value)
+
+function goPeer(path) {
+  if (path && path !== route.path) router.push(path)
+}
 </script>
 
 <template>
@@ -47,7 +73,7 @@ const pageTitle = computed(() => route.meta?.title ?? '')
           router
           class="ems-menu"
           background-color="transparent"
-          text-color="rgba(255,255,255,0.72)"
+          text-color="#a9aeb8"
           active-text-color="#ffffff"
         >
           <el-menu-item index="/dashboard">
@@ -121,9 +147,29 @@ const pageTitle = computed(() => route.meta?.title ?? '')
               <el-icon v-else><Fold /></el-icon>
             </el-button>
           </el-tooltip>
-          <el-breadcrumb separator="/">
+          <el-breadcrumb separator="/" class="responsive-breadcrumb">
             <el-breadcrumb-item>建筑能源智能管理系统</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="moduleTitle">{{ moduleTitle }}</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="moduleTitle && showModuleDropdown">
+              <el-dropdown trigger="click" @command="goPeer">
+                <span class="breadcrumb-dd-trigger" role="button" tabindex="0">
+                  {{ moduleTitle }}
+                  <span class="breadcrumb-dd-caret" aria-hidden="true">▾</span>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-for="it in modulePeers"
+                      :key="it.path"
+                      :command="it.path"
+                      :disabled="it.path === route.path"
+                    >
+                      {{ it.title }}
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </el-breadcrumb-item>
+            <el-breadcrumb-item v-else-if="moduleTitle">{{ moduleTitle }}</el-breadcrumb-item>
             <el-breadcrumb-item>{{ pageTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -159,10 +205,11 @@ const pageTitle = computed(() => route.meta?.title ?? '')
 .ems-aside {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #3d4f5f 0%, #2f3d4a 100%);
+  background: var(--ems-bg-dark, var(--ems-sidebar-bg, #1d2129));
   transition: width 0.2s ease;
   overflow: hidden;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  border-right: none;
+  box-shadow: none;
 }
 
 .ems-brand {
@@ -173,6 +220,7 @@ const pageTitle = computed(() => route.meta?.title ?? '')
   justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 0 12px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .ems-brand-full {
@@ -250,12 +298,25 @@ const pageTitle = computed(() => route.meta?.title ?? '')
   border-radius: 6px;
 }
 
-/* 选中项：背景 + 加粗 */
+/* 选中项：浅蓝底 + 左侧 3px 激活条（克制） */
 .ems-menu :deep(.el-menu-item.is-active) {
-  background: linear-gradient(90deg, rgba(24, 144, 255, 0.95), rgba(83, 163, 216, 0.85)) !important;
+  position: relative;
+  background: var(--ems-menu-active-bg, rgba(24, 144, 255, 0.12)) !important;
   color: #fff !important;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
+
+.ems-menu :deep(.el-menu-item.is-active::before) {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--ems-blue, #1890ff);
+  border-radius: 0 2px 2px 0;
+  pointer-events: none;
 }
 
 .ems-menu :deep(.el-menu-item.is-active .menu-label),
@@ -303,10 +364,10 @@ const pageTitle = computed(() => route.meta?.title ?? '')
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02), 0 4px 12px rgba(15, 23, 42, 0.04);
-  padding: 0 20px;
+  background: var(--ems-bg-card, #fff);
+  border-bottom: 1px solid var(--ems-border-light, #e5e6eb);
+  box-shadow: none;
+  padding: 0 24px;
   height: 56px;
 }
 
@@ -330,9 +391,31 @@ const pageTitle = computed(() => route.meta?.title ?? '')
 }
 
 .ems-main {
-  padding: 20px 22px 28px;
+  padding: var(--ems-space-lg) var(--ems-space-lg) var(--ems-space-xl);
   overflow: auto;
-  background: linear-gradient(180deg, #f0f2f5 0%, #f5f7fa 32%, #f5f7fa 100%);
+  background: var(--ems-main-bg, #f2f3f5);
+}
+
+.breadcrumb-dd-trigger {
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.breadcrumb-dd-trigger:hover {
+  color: var(--ems-blue, #1890ff);
+  background: rgba(24, 144, 255, 0.06);
+}
+
+.breadcrumb-dd-caret {
+  font-size: 10px;
+  opacity: 0.65;
 }
 
 .ems-header :deep(.el-breadcrumb) {
@@ -351,6 +434,16 @@ const pageTitle = computed(() => route.meta?.title ?? '')
 }
 
 @media (max-width: 768px) {
+  .responsive-breadcrumb :deep(.el-breadcrumb__item:not(:last-child)) {
+    display: none;
+  }
+
+  .responsive-breadcrumb :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ems-text-primary, rgba(0, 0, 0, 0.88));
+  }
+
   .ems-main {
     padding: 12px;
   }
